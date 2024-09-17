@@ -3,6 +3,12 @@ import express from 'express'
 import dotenv from 'dotenv'
 import connectDB from './config/db.js'
 import cookieParser from 'cookie-parser'
+import mongoSanitize from 'express-mongo-sanitize'
+import hpp from 'hpp'
+import rateLimit from 'express-rate-limit'
+import helmet from 'helmet'
+import xss from 'xss-clean'
+import cors from 'cors'
 
 import productRoutes from './routes/productRoutes.js'
 import userRoutes from './routes/userRoutes.js'
@@ -19,6 +25,21 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 app.use(cookieParser())
+
+app.set('trust proxy', 1)
+
+app.use(mongoSanitize())
+app.use(helmet())
+app.use(xss())
+
+const limiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 100,
+})
+
+app.use(limiter)
+app.use(hpp())
+app.use(cors())
 
 app.use('/api/products', productRoutes)
 app.use('/api/users', userRoutes)
